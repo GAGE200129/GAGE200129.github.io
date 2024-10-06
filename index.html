@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My first three.js app</title>
+  <link rel="stylesheet" href="index.css">
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+
+  <link rel="icon" type="image/png" href="./logo.png" />
+</head>
+
+<body>
+  <!-- Three js -->
+  <script type="importmap">
+        {
+          "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@v0.149.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@v0.149.0/examples/jsm/"
+          }
+        }
+  </script>
+  <!-- jquery -->
+  <script 
+    src="https://code.jquery.com/jquery-3.7.1.js" 
+    integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4="
+    crossorigin="anonymous">
+  </script>
+
+  <script type="module" src="/main.js"></script>
+  <script type="module" src="/database.js"></script>
+
+  <div class="sidebar">
+    <div class="top">
+      <div class="logo">
+        <img src="logo.png" width="32" height="32">
+        <span>IoT smart house</span>
+      </div>
+
+      <i class="bx bx-menu" id="btn"></i>
+    </div>
+    <div class="user">
+      <img src="user.png" class="user-img">
+      <div>
+        <p class="bold">Le Thanh Ngan</p>
+        <p>Admin</p>
+      </div>
+    </div>
+
+    <ul>
+      <li>
+        <a href="#" id='dieu_hoa1'>
+          <i class="bx bx-wind"></i>
+          <span class="nav-item">Điều hòa 1</span>
+        </a>
+      </li>
+
+      <li>
+        <a href="#" id='dieu_hoa2'>
+          <i class="bx bx-wind"></i>
+          <span class="nav-item">Điều hòa 2</span>
+        </a>
+      </li>
+
+      <li>
+        <a href="#" id='dieu_hoa3'>
+          <i class="bx bx-wind"></i>
+          <span class="nav-item">Điều hòa 3</span>
+        </a>
+      </li>
+
+      <li>
+        <a href="#" id='dieu_hoa4'>
+          <i class="bx bx-wind"></i>
+          <span class="nav-item">Điều hòa 4</span>
+        </a>
+      </li>
+
+      <li>
+        <a href="#" id='den1'>
+          <i class="bx bx-bulb"></i>
+          <span class="nav-item">Đèn 1</span>
+        </a>
+      </li>
+
+      <li>
+        <a href="#" id='den2'>
+          <i class="bx bx-bulb"></i>
+          <span class="nav-item">Đèn 2</span>
+        </a>
+      </li>
+
+      <li>
+        <a href="#" id='den3'>
+          <i class="bx bx-bulb"></i>
+          <span class="nav-item">Đèn 3</span>
+        </a>
+      </li>
+
+      <li>
+        <a href="#" id='den4'>
+          <i class="bx bx-bulb"></i>
+          <span class="nav-item">Đèn 4</span>
+        </a>
+      </li>
+
+
+    </ul>
+  </div>
+
+  <div class="main-content">
+
+  </div>
+
+  <div id="inspector">
+
+  </div>
+
+
+
+</body>
+
+<script>
+  let btn = document.querySelector('#btn');
+  let sidebar = document.querySelector('.sidebar');
+
+  btn.onclick = function () {
+    sidebar.classList.toggle('active');
+  };
+
+</script>
+
+</html>
