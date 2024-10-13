@@ -1,22 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
-import { getDatabase, ref, set, onValue, child, get } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-database.js";
-const firebaseConfig = {
-    apiKey: "AIzaSyBq_tIoCNmnuD7JXp5Wv44LrWtMYFrdw_w",
-    authDomain: "hcmute-iot.firebaseapp.com",
-    databaseURL: "https://hcmute-iot-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "hcmute-iot",
-    storageBucket: "hcmute-iot.appspot.com",
-    messagingSenderId: "242437644099",
-    appId: "1:242437644099:web:4f5e80b531443e4e6b99f6"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const database = getDatabase(app);
-const db = ref(database);
-
+import { kich_hoat_mqtt, mqtt_temperature, mqtt_humidity, mqtt_luminance } from './mqtt.js';
 
 const mainContentDiv = document.querySelector('.main-content');
 
@@ -40,6 +24,63 @@ const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
 scene.add(directionalLight);
 scene.add(directionalLight.target);
 
+export const mqtt_client = kich_hoat_mqtt();
+
+var onAppend = function (elem, f) {
+    var observer = new MutationObserver(function (mutations) {
+        mutations.forEach(function (m) {
+            if (m.addedNodes.length) {
+                f(m.addedNodes)
+            }
+        })
+    })
+    observer.observe(elem, { childList: true })
+}
+onAppend(document.getElementById("inspector"), function (added) {
+    const room1_light_on_btn = document.getElementById("room1_light_on");
+    if (room1_light_on_btn) {
+        room1_light_on_btn.addEventListener("click", () => {
+            mqtt_client.publish("home/light_control", "ON");
+        });
+    }
+
+    const room1_light_off_btn = document.getElementById("room1_light_off");
+    if (room1_light_off_btn) {
+        room1_light_off_btn.addEventListener("click", () => {
+            mqtt_client.publish("home/light_control", "OFF");
+        });
+    }
+
+    const room1_fan_on_btn = document.getElementById("room1_fan_on");
+    if (room1_fan_on_btn) {
+        room1_fan_on_btn.addEventListener("click", () => {
+            mqtt_client.publish("home/fan_control", "ON");
+        });
+    }
+
+    const room1_fan_off_btn = document.getElementById("room1_fan_off");
+    if (room1_fan_off_btn) {
+        room1_fan_off_btn.addEventListener("click", () => {
+            mqtt_client.publish("home/fan_control", "OFF");
+        });
+    }
+
+    const room1_conditioner_on_btn = document.getElementById("room1_conditioner_on");
+    if (room1_conditioner_on_btn) {
+        room1_conditioner_on_btn.addEventListener("click", () => {
+            mqtt_client.publish("home/aircondition_control", "ON");
+        });
+    }
+
+    const room1_conditioner_off_btn = document.getElementById("room1_conditioner_off");
+    if (room1_conditioner_off_btn) {
+        room1_conditioner_off_btn.addEventListener("click", () => {
+            mqtt_client.publish("home/aircondition_control", "OFF");
+        });
+    }
+
+
+})
 
 loader.load('low_poly_house_interior.glb', function (gltf) {
     scene.add(gltf.scene);
@@ -266,98 +307,9 @@ document.getElementById('den4').onclick = function () {
 }
 
 
-//Lay du lieu moi 1s
-let nhietdo = -1;
-let power = -1;
-let time = -1;
-function getDataFromDatabase() {
-    let conditioner_name = "unknown";
-    let light_name = "unknown";
-
-    //Get light condition
-    get(child(db, "den1/status")).then((snapshot) => {
-        if (snapshot.exists() && snapshot.val())
-            light1_pl.intensity = 100;
-        else if (snapshot.exists() && !snapshot.val())
-            light1_pl.intensity = 0;
-    });
-
-    //Inspector view
-    switch (camera_target) {
-        case conditioner1_view: conditioner_name = "dieuhoa1"; break;
-        case conditioner2_view: conditioner_name = "dieuhoa2"; break;
-        case conditioner3_view: conditioner_name = "dieuhoa3"; break;
-        case conditioner4_view: conditioner_name = "dieuhoa4"; break;
-
-        case light1_view: light_name = "den1"; break;
-        case light2_view: light_name = "den2"; break;
-        case light3_view: light_name = "den3"; break;
-        case light4_view: light_name = "den4"; break;
-    }
-    if (conditioner_name != "unknown") {
-        get(child(db, conditioner_name + "/nhietdo")).then((snapshot) => {
-            if (snapshot.exists())
-                nhietdo = snapshot.val();
-        }).catch((error) => {
-            console.error(error);
-        });
-
-        get(child(db, conditioner_name + "/power")).then((snapshot) => {
-            if (snapshot.exists())
-                power = snapshot.val();
-        }).catch((error) => {
-            console.error(error);
-        });
-
-        get(child(db, conditioner_name + "/time")).then((snapshot) => {
-            if (snapshot.exists())
-                time = snapshot.val();
-        }).catch((error) => {
-            console.error(error);
-        });
-
-        let jouls = time * 60 * power;
-        let power_used = jouls * 2.7778e-7;
-        const min_temp = 5;
-        const max_temp = 50;
-
-
-
-        $(".stem-perct").css("height", (nhietdo - min_temp) / max_temp * 100 + '%');
-        $("p#temprature_str").html(nhietdo + '&deg;C');
-        $("p#power_str").html("Công suất: " + power.toFixed(2) + " Watt");
-        $("p#time_str").html("Thời gian chạy: " + time.toFixed(0) + " phút");
-        $("p#enegry_used_str").html("Tiêu thụ: " + power_used.toFixed(2) + " kW");
-    } else if (light_name != "unknown") {
-        get(child(db, light_name + "/power")).then((snapshot) => {
-            if (snapshot.exists())
-                power = snapshot.val();
-        }).catch((error) => {
-            console.error(error);
-        });
-
-        get(child(db, light_name + "/time")).then((snapshot) => {
-            if (snapshot.exists())
-                time = snapshot.val();
-        }).catch((error) => {
-            console.error(error);
-        });
-
-        let jouls = time * 60 * power;
-        let power_used = jouls * 2.7778e-7;
-        const min_temp = 5;
-        const max_temp = 50;
-
-        $("p#power_str").html("Công suất: " + power.toFixed(2) + " Watt");
-        $("p#time_str").html("Thời gian chạy: " + time.toFixed(0) + " phút");
-        $("p#enegry_used_str").html("Tiêu thụ: " + power_used.toFixed(2) + " kW");
-    }
-
-};
 
 
 let accumulated_time = 0.0;
-
 function animate() {
     requestAnimationFrame(animate);
 
@@ -365,8 +317,6 @@ function animate() {
         camera.position.lerp(camera_target.position, 0.0016 * 20);
         camera.quaternion.slerp(camera_target.quaternion, 0.0016 * 20);
     }
-
-
 
     light1.lookAt(camera.position);
     light2.lookAt(camera.position);
@@ -376,7 +326,14 @@ function animate() {
 
     accumulated_time += 0.016;
     if (accumulated_time > 1) {
-        getDataFromDatabase();
+        const min_temp = 5;
+        const max_temp = 50;
+        $(".stem-perct").css("height", (mqtt_temperature - min_temp) / max_temp * 100 + '%');
+        $("p#temprature_str").html(mqtt_temperature + '&deg;C');
+        $("p#humidity_str").html(mqtt_humidity + '%');
+        $("p#luminance_str").html(mqtt_luminance + ' lux');
+
+
 
         accumulated_time = 0;
     }
@@ -390,10 +347,7 @@ function updateInspector() {
     let inspector = document.getElementById("inspector");
     switch (camera_target) {
         case conditioner1_view:
-        case conditioner2_view:
-        case conditioner3_view:
-        case conditioner4_view:
-
+        case light1_view:
             var nhiet_do_phong = document.createElement("div");
             nhiet_do_phong.innerHTML = `
                 <p style="font-size:35px;">Nhiệt độ phòng</p>
@@ -411,88 +365,57 @@ function updateInspector() {
             `;
             nhiet_do_phong.classList.add("inspector-attribute");
 
-            var cong_suat = document.createElement("div");
-            cong_suat.innerHTML = `
-                <p id="power_str" style="font-size:25px"></p>
-                <p id="time_str" style="font-size:25px"></p>
-                <p id="enegry_used_str" style="font-size:25px;"></p>
+            var do_am_phong = document.createElement("div");
+            do_am_phong.innerHTML = `
+                <p style="font-size:35px;">Độ ẩm phòng</p>
+                <div>
+                <p id="humidity_str" style="font-size:20px"> 80%; </p>
+                </div>
             `;
-            cong_suat.classList.add("inspector-attribute");
+            do_am_phong.classList.add("inspector-attribute");
 
-            var trang_thai = document.createElement("div");
-            trang_thai.innerHTML = `
-                <p style="font-size:40px;">Trạng thái</p>
-                <button class="button-30" role="button">On</button>
-                <button class="button-30" role="button">Off</button>
+            var do_sang_phong = document.createElement("div");
+            do_sang_phong.innerHTML = `
+                <p style="font-size:35px;">Độ sáng phòng</p>
+                <div>
+                <p id="luminance_str" style="font-size:20px"> 80 lux; </p>
+                </div>
             `;
-            trang_thai.classList.add("inspector-attribute");
+            do_sang_phong.classList.add("inspector-attribute");
 
-            var chart = document.createElement("div");
-            chart.innerHTML = `
-                <p style="font-size:40px;">Đồ thị</p>
-                <canvas id="chart_conditioner"></canvas>
-                <script>
-                new Chart(document.getElementById("chart_conditioner"), {
-                    type: "bar",
-                    data: {
-                        labels: ["Red", "Blue", "Yellow", "Green", "Purple", "Orange"],
-                        datasets: [{
-                            label: "# of Votes",
-                            data: [12, 19, 3, 5, 2, 3],
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        scales: {
-                            y: {
-                                beginAtZero: true
-                            }
-                        }
-                    }
-                });
-                </script>
+            var controls = document.createElement("div");
+            controls.innerHTML = `
+            <p style="font-size:35px;">Điều khiển phòng</p>
+            <div class="inspector-control-element">
+                <p style="font-size:35px;">Đèn</p>
+                <button id="room1_light_on" class="button-30" role="button">On</button>
+                <button id="room1_light_off"  class="button-30" role="button">Off</button>
+            </div>
 
+            <div class="inspector-control-element">
+                <p style="font-size:35px;">Quạt</p>
+                <button id="room1_fan_on"  class="button-30" role="button">On</button>
+                <button id="room1_fan_off" class="button-30" role="button">Off</button>
+            </div>
+
+            <div class="inspector-control-element">
+                <p style="font-size:35px;">Điều hòa</p>
+                <button id="room1_conditioner_on"  class="button-30" role="button">On</button>
+                <button id="room1_conditioner_off" class="button-30" role="button">Off</button>
+            </div>
             `;
-            chart.classList.add("inspector-attribute");
-
-
+            controls.classList.add("inspector-attribute");
 
             inspector.innerHTML = '';
             inspector.appendChild(nhiet_do_phong);
-            inspector.appendChild(cong_suat);
-            inspector.appendChild(trang_thai);
-            inspector.appendChild(chart);
+            inspector.appendChild(do_am_phong);
+            inspector.appendChild(do_sang_phong);
+            inspector.appendChild(controls);
 
-            break;
-
-        case light1_view:
-        case light2_view:
-        case light3_view:
-        case light4_view:
-            var cong_suat = document.createElement("div");
-            cong_suat.classList.add("inspector-attribute");
-            cong_suat.innerHTML = `
-                <p id="power_str" style="font-size:25px"></p>
-                <p id="time_str" style="font-size:25px"></p>
-                <p id="enegry_used_str" style="font-size:25px;"></p>
-            `;
-
-            var trang_thai = document.createElement("div");
-            trang_thai.classList.add("inspector-attribute");
-            trang_thai.innerHTML = `
-                <p style="font-size:40px;">Trạng thái</p>
-                <div class="checkbox-wrapper-25">
-                <input type="checkbox">
-                </div>
-            `;
-
-
-            inspector.innerHTML = '';
-            inspector.appendChild(cong_suat);
-            inspector.appendChild(trang_thai);
             break;
 
         default:
+            inspector.innerHTML = '';
             break;
     }
 }
