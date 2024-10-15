@@ -11,7 +11,7 @@ export function kich_hoat_mqtt() {
         clientId: 'gage',
         username: 'nhom2iot',
         password: 'topserver',
-        host: "nhom2iot.ddns.net",
+        host: "wss://nhom2iot.ddns.net",
         port: 8083
     }
 
