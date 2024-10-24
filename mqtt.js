@@ -11,7 +11,7 @@ export function kich_hoat_mqtt() {
         clientId: 'gage',
         username: 'nhom2iot',
         password: 'topserver',
-        host: "wss://nhom2iot.ddns.net",
+        host: "nhom2iot.ddns.net",
         port: 8083
     }
 
@@ -70,8 +70,4 @@ export function kich_hoat_mqtt() {
     //Register callbacks for control buttons
     
     return client;
-}
-
-export function mqtt_room1_light_on() {
-    console.log("light on");
 }
